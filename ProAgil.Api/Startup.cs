@@ -43,7 +43,7 @@ namespace ProAgil.Api
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+            app.UseStaticFiles();
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseHttpsRedirection();
 
