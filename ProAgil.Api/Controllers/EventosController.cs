@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProAgil.Domain;
 using ProAgil.Repository;
+using System.Text.Json;
 
 namespace ProAgil.Api.Controllers
 {
@@ -64,6 +65,7 @@ namespace ProAgil.Api.Controllers
         {
             try
             {
+                model.QtdPessoas = model.QtdPessoas;
                 _repo.Add(model);
                 
                 if(await _repo.SaveChangesAsync())

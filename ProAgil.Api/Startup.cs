@@ -28,6 +28,7 @@ namespace ProAgil.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
             services.AddDbContext<ProAgilContext>(
                 options =>
                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection"))
