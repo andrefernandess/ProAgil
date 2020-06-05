@@ -8,13 +8,15 @@ import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { ptBrLocale } from 'ngx-bootstrap/locale';
 import { defineLocale } from 'ngx-bootstrap/chronos';
 import { BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { ToastrService } from 'ngx-toastr';
 defineLocale('pt-br', ptBrLocale);
 @Component({
   selector: 'app-Eventos',
   templateUrl: './Eventos.component.html',
-  styleUrls: ['./Eventos.component.css']
+  styleUrls: ['./Eventos.component.css'],
 })
 export class EventosComponent implements OnInit {
+  titulo = 'Eventos';
   eventos: Evento[];
   evento: Evento;
   imagemLargura = 50;
@@ -29,22 +31,24 @@ export class EventosComponent implements OnInit {
 
   _filtroLista = '';
 
-
   constructor(
-      private eventoService: EventoService
-    , private modalService: BsModalService
-    , private fb: FormBuilder
-    , private localeService: BsLocaleService
-      ) {
-        this.localeService.use('pt-br');
-      }
+    private eventoService: EventoService,
+    private modalService: BsModalService,
+    private fb: FormBuilder,
+    private localeService: BsLocaleService,
+    private toastr: ToastrService
+  ) {
+    this.localeService.use('pt-br');
+  }
 
   get filtroLista(): string {
     return this._filtroLista;
   }
   set filtroLista(value: string) {
     this._filtroLista = value;
-    this.eventosFiltrados = this.filtroLista ? this.filtrarEventos(this.filtroLista) : this.eventos;
+    this.eventosFiltrados = this.filtroLista
+      ? this.filtrarEventos(this.filtroLista)
+      : this.eventos;
   }
 
   ngOnInit() {
@@ -55,23 +59,33 @@ export class EventosComponent implements OnInit {
   getEventos() {
     this.eventoService.getAllEvento().subscribe(
       (_eventos: Evento[]) => {
-      this.eventos = _eventos;
-      this.eventosFiltrados = this.eventos;
-      console.log(this.eventos);
-    }, error => {
-      console.log(error);
-    });
+        this.eventos = _eventos;
+        this.eventosFiltrados = this.eventos;
+        console.log(this.eventos);
+      },
+      (error) => {
+        console.log(error);
+        this.toastr.error('Erro ao carregar eventos');
+      }
+    );
   }
 
   validation() {
     this.registerForm = this.fb.group({
-      tema: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(50)]],
+      tema: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(4),
+          Validators.maxLength(50),
+        ],
+      ],
       local: ['', Validators.required],
       dataEvento: ['', Validators.required],
       imagemURL: ['', Validators.required],
       qtdPessoas: ['', [Validators.required, Validators.max(120)]],
       telefone: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
+      email: ['', [Validators.required, Validators.email]],
     });
   }
 
@@ -82,7 +96,7 @@ export class EventosComponent implements OnInit {
   filtrarEventos(filtrarPor: string): Evento[] {
     filtrarPor = filtrarPor.toLocaleLowerCase();
     return this.eventos.filter(
-      evento => evento.tema.toLocaleLowerCase().indexOf(filtrarPor) !== -1
+      (evento) => evento.tema.toLocaleLowerCase().indexOf(filtrarPor) !== -1
     );
   }
 
@@ -104,25 +118,34 @@ export class EventosComponent implements OnInit {
   }
 
   salvarAlteracao(template: any) {
-    if(this.registerForm.valid){
-      if(this.modoSalvar === 'post'){
+    if (this.registerForm.valid) {
+      if (this.modoSalvar === 'post') {
         this.evento = Object.assign({}, this.registerForm.value);
         this.eventoService.postEvento(this.evento).subscribe(
           (novoEvento: Evento) => {
             console.log(novoEvento);
             template.hide();
             this.getEventos();
-          }, error => {
+            this.toastr.success('Adicionado com sucesso');
+          },
+          (error) => {
+            this.toastr.error('Erro ao adicionar');
             console.log(error);
           }
         );
       } else {
-        this.evento = Object.assign({id: this.evento.id}, this.registerForm.value);
+        this.evento = Object.assign(
+          { id: this.evento.id },
+          this.registerForm.value
+        );
         this.eventoService.putEvento(this.evento).subscribe(
           () => {
             template.hide();
             this.getEventos();
-          }, error => {
+            this.toastr.success('Editado com sucesso');
+          },
+          (error) => {
+            this.toastr.error('Erro ao editar');
             console.log(error);
           }
         );
@@ -139,12 +162,14 @@ export class EventosComponent implements OnInit {
   confirmeDelete(template: any) {
     this.eventoService.deleteEvento(this.evento.id).subscribe(
       () => {
-          template.hide();
-          this.getEventos();
-        }, error => {
-          console.log(error);
-        }
+        template.hide();
+        this.getEventos();
+        this.toastr.success('Deletado com sucesso');
+      },
+      (error) => {
+        this.toastr.error('Erro ao deletar');
+        console.log(error);
+      }
     );
   }
-
 }
